@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/y1"
+        android:layout_width="wrap_content"
+        android:layout_height="1dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.05" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/y2"
+        android:layout_width="wrap_content"
+        android:layout_height="1dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.45" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:src="@drawable/bg_layout_city"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imgDescriptionCity"
+        android:layout_width="@dimen/_100sdp"
+        android:layout_height="@dimen/_100sdp"
+        android:layout_marginRight="@dimen/_10sdp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvCurrentTempleCity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_20sdp"
+        android:fontFamily="@font/sf_pro_display_thin"
+        android:text="19°"
+        android:textColor="@color/white"
+        android:textSize="@dimen/_43sdp"
+        app:layout_constraintLeft_toLeftOf="@id/y1"
+        app:layout_constraintRight_toLeftOf="@id/y2"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvHightAndLow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="-12dp"
+        android:fontFamily="@font/sf_pro_display_regular"
+        android:text="H and L"
+        android:textColor="#9E9E9E"
+        android:textSize="@dimen/_10sdp"
+        app:layout_constraintLeft_toLeftOf="@id/y1"
+        app:layout_constraintRight_toLeftOf="@id/y2"
+        app:layout_constraintTop_toBottomOf="@id/tvCurrentTempleCity" />
+
+    <TextView
+        android:id="@+id/tvCitySelect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/sf_pro_display_regular"
+        android:text="City Name"
+        android:textColor="@color/white"
+        android:textSize="@dimen/_10sdp"
+        app:layout_constraintLeft_toLeftOf="@id/y1"
+        app:layout_constraintRight_toLeftOf="@id/y2"
+        app:layout_constraintTop_toBottomOf="@id/tvHightAndLow" />
+
+    <TextView
+        android:id="@+id/tvDescriptionCity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:layout_marginRight="@dimen/_20sdp"
+        android:fontFamily="@font/sf_pro_display_regular"
+        android:text="Description"
+        android:textColor="@color/white"
+        android:textSize="@dimen/_10sdp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imgDescriptionCity" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

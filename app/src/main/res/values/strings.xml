@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">WeatherForcast</string>
+    <string name="hourly">Hàng giờ</string>
+    <string name="dayly">Hàng ngày</string>
+    <string name="weather">Weather</string>
+</resources>
