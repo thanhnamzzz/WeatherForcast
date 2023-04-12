@@ -2,20 +2,20 @@ package com.example.weatherforcast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.example.weatherforcast.SQLDataBase.SQLHelperHistory;
 import com.example.weatherforcast.search_City.CityName;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -46,8 +46,12 @@ public class SearchCity extends AppCompatActivity {
     @BindView(R.id.flLayout)
     FlowLayout flLayout;
 
-    private List<CityName> cityNames;
-    private ArrayList<String> listCityName;
+    private SQLHelperHistory mSqlHelperHistory;
+
+    private List<CityName> cityNamesFromJSon;
+    private ArrayList<String> listCityForSearch;
+    private ArrayList<CityName> listCitySearched;
+//    private ArrayList<City> listCitySearched;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +69,7 @@ public class SearchCity extends AppCompatActivity {
                 onBackPressed();
             }
         });
-        ArrayAdapter arrayAdapter = new ArrayAdapter(this, R.layout.search_item, listCityName);
+        ArrayAdapter arrayAdapter = new ArrayAdapter(this, R.layout.search_item, listCityForSearch);
         edtSearchCity.setAdapter(arrayAdapter);
         arrayAdapter.notifyDataSetChanged();
 
@@ -88,7 +92,10 @@ public class SearchCity extends AppCompatActivity {
         edtSearchCity.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
+                String citySearch = edtSearchCity.getText().toString();
+                hideKeyBoard();
+                checkSelection(citySearch);
+                searchData(citySearch);
             }
 
             @Override
@@ -99,55 +106,94 @@ public class SearchCity extends AppCompatActivity {
         edtSearchCity.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                searchData();
+                String citySearch = edtSearchCity.getText().toString();
+                hideKeyBoard();
+                checkSelection(citySearch);
+                searchData(citySearch);
             }
         });
 
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                searchData();
+                String citySearch = edtSearchCity.getText().toString();
+                searchData(citySearch);
             }
         });
+
+        for (int i = 0; i < listCitySearched.size(); i++) {
+            flLayout.addView(addView(listCitySearched.get(i)));
+        }
     }
 
-    private void searchData() {
-        String citySearch = edtSearchCity.getText().toString();
-        for (CityName cityName : cityNames) {
-            if (cityName.getName().equals(citySearch)) {
-                double latitude = cityName.getCoord().getLat();
-                double longtitude = cityName.getCoord().getLon();
-                Intent intent = new Intent(SearchCity.this, MainActivity.class);
-                intent.putExtra("lat", latitude);
-                intent.putExtra("lon", longtitude);
-                startActivity(intent);
+    private void checkSelection(String citySearch) {
+        CityName cityName = new CityName();
+        cityName.setName(citySearch);
+        Boolean check = true;
+        if (listCitySearched.size() == 0 || listCitySearched == null) {
+            mSqlHelperHistory.addSearchHistory(cityName);
+        } else {
+            for (int i = 0; i < listCitySearched.size(); i++) {
+                if (citySearch.equals(listCitySearched.get(i).getName())) {
+                    check = false;
+                    break;
+                }
+            }
+            if (check == true) {
+                mSqlHelperHistory.addSearchHistory(cityName);
             }
         }
-        flLayout.addView(addView(citySearch));
+    }
+
+    private void searchData(String citySearch) {
+        for (CityName cityName : cityNamesFromJSon) {
+            if (cityName.getName().equals(citySearch)) {
+                intentData(cityName);
+            }
+        }
         edtSearchCity.setText("");
     }
 
-    private View addView(String test) {
+    private void intentData(CityName cityName) {
+        String latitude = String.valueOf(cityName.getCoord().getLat());
+        String longtitude = String.valueOf(cityName.getCoord().getLon());
+        Intent intent = new Intent();
+        intent.putExtra("lat", latitude);
+        intent.putExtra("lon", longtitude);
+        intent.putExtra("newCity", cityName.getName());
+        setResult(MainActivity.RESULT_OK, intent);
+        finish();
+    }
+
+    private View addView(CityName cityName) {
+        String city = cityName.getName();
         View view = getLayoutInflater().inflate(R.layout.layout_flowlayout,
                 (ViewGroup) getWindow().getDecorView().getRootView(), false);
         TextView tvContentSearch = view.findViewById(R.id.tvContentSearch);
-        tvContentSearch.setText(test);
+        tvContentSearch.setText(city);
+        tvContentSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                searchData(city);
+            }
+        });
         return view;
     }
 
     private void inData() {
+        mSqlHelperHistory = new SQLHelperHistory(getApplicationContext());
         try {
-            cityNames = readCityFromJson();
+            cityNamesFromJSon = readCityFromJson();
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-        listCityName = new ArrayList<>();
-        for (CityName cityName : cityNames) {
-            listCityName.add(cityName.getName());
+        listCityForSearch = new ArrayList<>();
+        for (CityName cityName : cityNamesFromJSon) {
+            listCityForSearch.add(cityName.getName());
         }
-
+        listCitySearched = mSqlHelperHistory.getListCity();
     }
 
     private List<CityName> readCityFromJson() throws IOException, JSONException {
@@ -169,8 +215,17 @@ public class SearchCity extends AppCompatActivity {
         return new String(buffer, "utf-8");
     }
 
+
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        finish();
+    }
+
+    private void hideKeyBoard() {
+        InputMethodManager inputMethodManager = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (inputMethodManager != null) {
+            inputMethodManager.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(), 0);
+        }
     }
 }

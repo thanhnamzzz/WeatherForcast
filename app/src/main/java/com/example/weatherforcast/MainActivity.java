@@ -1,14 +1,10 @@
 package com.example.weatherforcast;
 
 import android.Manifest;
-import android.content.Context;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,29 +16,27 @@ import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.example.weatherforcast.SQLDataBase.SQLHelper;
+import com.example.weatherforcast.SQLDataBase.SQLHelperHistory;
 import com.example.weatherforcast.current_City.CurrentWeather;
 import com.example.weatherforcast.hours_Weather.HoursAdapter;
 import com.example.weatherforcast.hours_Weather.HoursWeather;
 import com.example.weatherforcast.hours_Weather.ListHours;
+import com.example.weatherforcast.search_City.CityName;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.libraries.places.api.Places;
-import com.google.android.libraries.places.api.net.PlacesClient;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -54,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
     final String TAG = "MainAcitvity";
     @BindView(R.id.tvCurrentCity)
     TextView tvCurrentCity;
+    //    @BindView(R.id.btnSearch)
+//    ImageButton btnSearch;
     @BindView(R.id.tvCurrentTemple)
     TextView tvCurrentTemple;
     @BindView(R.id.tvCurrentDescription)
@@ -93,8 +89,11 @@ public class MainActivity extends AppCompatActivity {
     private WeatherServices mWeatherServices;
     private ArrayList<ListHours> mListHours;
     private HoursAdapter mHoursAdapter;
-    private String currentCity = "Hà Nội";
+    private String currentCity;
     private String lat, lon;
+    private static final int REQUEST_CODE = 1;
+    private SQLHelper mSqlHelper;
+    private SQLHelperHistory mSqlHelperHistory;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -111,6 +110,18 @@ public class MainActivity extends AppCompatActivity {
         inView();
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            lat = data.getStringExtra("lat");
+            lon = data.getStringExtra("lon");
+            Log.d(TAG, "onActivityResult: lat " + lat + " lon " + lon);
+            callApiByLocation(lat, lon);
+            requestHoursWeatherByLocation(lat, lon);
+        }
+    }
+
     private void inView() {
         ButterKnife.bind(this);
         btnHourly.setOnClickListener(new View.OnClickListener() {
@@ -122,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
                 rvHours.setVisibility(View.VISIBLE);
             }
         });
+
         btnWeek.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -134,15 +146,14 @@ public class MainActivity extends AppCompatActivity {
         btnList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, ListCityActivity2.class);
-                startActivity(intent);
+                Intent intent = new Intent(MainActivity.this, ListCityActivity.class);
+                startActivityForResult(intent, REQUEST_CODE);
             }
         });
         btnLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getLocation();
-//                callApiByLocation();
             }
         });
         rvHours.setAdapter(mHoursAdapter);
@@ -159,19 +170,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void inData() {
+        mSqlHelper = new SQLHelper(getApplicationContext());
+        mSqlHelperHistory = new SQLHelperHistory(getApplicationContext());
         mWeatherServices = RetrofitClient.getServices(Global.BASE_URL, WeatherServices.class);
-        Intent intent = getIntent();
-        lat = intent.getStringExtra("lat");
-        lon = intent.getStringExtra("lon");
-        Log.d(TAG, "inData: lat " + lat + " lon " + lon);
-        if (lat == null && lon == null) {
-            callApiByCityName(currentCity);
-        } else {
+        ArrayList<CityName> cities = mSqlHelper.getListCity();
+        if (cities.size() == 0){
+            getLocation();
+        }else {
+            lat = String.valueOf(cities.get(0).getCoord().getLat());
+            lon = String.valueOf(cities.get(0).getCoord().getLon());
             callApiByLocation(lat, lon);
+            requestHoursWeatherByLocation(lat, lon);
         }
         mListHours = new ArrayList<>();
-        requestHoursWeatherByCityName(currentCity);
-        requestDaylyWeatherByCityName(currentCity);
         mHoursAdapter = new HoursAdapter(mListHours);
     }
 
@@ -183,18 +194,7 @@ public class MainActivity extends AppCompatActivity {
         mWeatherServices.getWeatherHoursByCityName(currentCity, Global.API_KEY).enqueue(new Callback<HoursWeather>() {
             @Override
             public void onResponse(Call<HoursWeather> call, Response<HoursWeather> response) {
-                Log.d(TAG, "onResponse: response " + response.body());
-                if (response.isSuccessful()) {
-                    if (response.code() == 200) {
-                        HoursWeather hoursWeather = response.body();
-                        mListHours.clear();
-                        for (int i = 0; i < 15; i++) {
-                            mListHours.add((hoursWeather.getListHours().get(i)));
-                        }
-                        Log.d(TAG, "onResponse: mListHours.size " + mListHours.size());
-                        bindData(mListHours);
-                    }
-                }
+                requestListHourWeather(response);
             }
 
             @Override
@@ -202,6 +202,35 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "onFailure: " + t.getMessage());
             }
         });
+    }
+
+    private void requestHoursWeatherByLocation(String lat, String lon) {
+        mWeatherServices.getWeatherHoursByLocation(lat, lon, Global.API_KEY).enqueue(new Callback<HoursWeather>() {
+            @Override
+            public void onResponse(Call<HoursWeather> call, Response<HoursWeather> response) {
+                requestListHourWeather(response);
+            }
+
+            @Override
+            public void onFailure(Call<HoursWeather> call, Throwable t) {
+
+            }
+        });
+    }
+
+    private void requestListHourWeather(Response<HoursWeather> response) {
+        Log.d(TAG, "onResponse: response " + response.body());
+        if (response.isSuccessful()) {
+            if (response.code() == 200) {
+                HoursWeather hoursWeather = response.body();
+                mListHours.clear();
+                for (int i = 0; i < 15; i++) {
+                    mListHours.add((hoursWeather.getListHours().get(i)));
+                }
+                Log.d(TAG, "onResponse: mListHours.size " + mListHours.size());
+                bindData(mListHours);
+            }
+        }
     }
 
     private void bindData(ArrayList<ListHours> mListHours) {
@@ -214,18 +243,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getLocation() {
-//        FusedLocationProviderClient fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-//            fusedLocationProviderClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-//                @Override
-//                public void onSuccess(Location location) {
-//                    if (location != null) {
-//                        getCityNameFromLocation(location);
-//                    }
-//                }
-//            });
-//        }
-
         FusedLocationProviderClient fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED
@@ -237,28 +254,16 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(Location location) {
                             if (location != null) {
-//                            locationCity[0] = location.getLatitude() + "";
-//                            locationCity[1] = location.getLongitude() + "";
-                                Log.d(TAG, "onSuccess: " + location.getLatitude() + " | " + location.getLongitude());
+                                callApiByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
+                                requestHoursWeatherByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
                             }
                         }
                     });
         }
-
-
-//        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//        LocationListener locationListener = new LocationListener() {
-//            @Override
-//            public void onLocationChanged(@NonNull Location location) {
-//                double lat = location.getLatitude();
-//                double lon = location.getLongitude();
-//                Log.d(TAG, "onLocationChanged: lat " + lat + " | lon " + lon);
-//            }
-//        };
     }
 
     private void callApiByLocation(String lat, String lon) {
-        mWeatherServices.getWeatherByLocation(lat, lon, Global.API_KEY).enqueue(new Callback<CurrentWeather>() {
+        mWeatherServices.getWeatherByLocation(lat, lon, Global.VN, Global.API_KEY).enqueue(new Callback<CurrentWeather>() {
             @Override
             public void onResponse(Call<CurrentWeather> call, Response<CurrentWeather> response) {
                 if (response.isSuccessful()) {
@@ -276,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void callApiByCityName(String currentCity) {
-        mWeatherServices.getWeatherByCityName(currentCity, Global.API_KEY).enqueue(new Callback<CurrentWeather>() {
+        mWeatherServices.getWeatherByCityName(currentCity, Global.VN, Global.API_KEY).enqueue(new Callback<CurrentWeather>() {
             @Override
             public void onResponse(Call<CurrentWeather> call, Response<CurrentWeather> response) {
                 if (response.isSuccessful()) {

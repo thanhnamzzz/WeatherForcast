@@ -7,6 +7,7 @@ public class Global {
     public static final String ICON_FORMAT = "@4x.png";
     public static final String ICON_FORMAT_HOURS = "@2x.png";
     public static final String CELSIUS = "\u2103";
+    public static final String VN = "vi";
 
     public static String convertKtoC(float kelvin) {
         return Math.round(kelvin - 272.15) + CELSIUS;

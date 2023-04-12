@@ -3,4 +3,5 @@
     <string name="hourly">Hàng giờ</string>
     <string name="dayly">Hàng ngày</string>
     <string name="weather">Weather</string>
+    <string name="delete">Xóa</string>
 </resources>
