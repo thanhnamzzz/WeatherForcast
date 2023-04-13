@@ -61,6 +61,7 @@ public class ListCityAdapter extends RecyclerView.Adapter<ListCityAdapter.ListCi
         this.IOnItemClickListener = IOnItemClickListener;
     }
 
+
     public class ListCityViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         ImageView imgDescriptionCity;
         TextView tvCurrentTempleCity,tvHightAndLow,tvCitySelect,tvDescriptionCity;
@@ -77,6 +78,11 @@ public class ListCityAdapter extends RecyclerView.Adapter<ListCityAdapter.ListCi
         @Override
         public void onClick(View v) {
             IOnItemClickListener.onItemClick(mListHistoryCity.get(getAdapterPosition()));
+        }
+
+        public void deleteItem(int position) {
+            mListHistoryCity.remove(position);
+            notifyItemRemoved(position);
         }
     }
 }

@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     final String TAG = "MainAcitvity";
     @BindView(R.id.tvCurrentCity)
     TextView tvCurrentCity;
-    //    @BindView(R.id.btnSearch)
+//    @BindView(R.id.btnSearch)
 //    ImageButton btnSearch;
     @BindView(R.id.tvCurrentTemple)
     TextView tvCurrentTemple;
@@ -124,6 +124,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void inView() {
         ButterKnife.bind(this);
+//        btnSearch.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent intent = new Intent(MainActivity.this, SearchCity.class);
+//                startActivityForResult(intent, REQUEST_CODE);
+//            }
+//        });
         btnHourly.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -174,9 +181,9 @@ public class MainActivity extends AppCompatActivity {
         mSqlHelperHistory = new SQLHelperHistory(getApplicationContext());
         mWeatherServices = RetrofitClient.getServices(Global.BASE_URL, WeatherServices.class);
         ArrayList<CityName> cities = mSqlHelper.getListCity();
-        if (cities.size() == 0){
+        if (cities.size() == 0) {
             getLocation();
-        }else {
+        } else {
             lat = String.valueOf(cities.get(0).getCoord().getLat());
             lon = String.valueOf(cities.get(0).getCoord().getLon());
             callApiByLocation(lat, lon);
