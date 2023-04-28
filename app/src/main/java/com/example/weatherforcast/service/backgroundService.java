@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -39,6 +40,7 @@ import retrofit2.Response;
 
 public class backgroundService extends Service {
     private WeatherServices mWeatherServices;
+    String lat, lon;
     Handler mHandler = new Handler();
 
     @Override
@@ -73,13 +75,15 @@ public class backgroundService extends Service {
         calendar.setTimeZone(timeZone);
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
         String currentTime = timeFormat.format(calendar.getTime());
+        getLocation();
+        Log.d("TAG", "checkTime: lat " + lat + "| lon " + lon);
         if (currentTime.equals("07:00:00")) {
-            callApiByLocation("21.116671", "105.883331");
-//            getLocation();
+//            callApiByLocation("21.116671", "105.883331");
+            callApiByLocation(lat, lon);
         }
-        if (currentTime.equals("07:00:00") || currentTime.equals("12:00:00") || currentTime.equals("16:00:00")) {
-            requestHoursWeatherByLocation("21.116671", "105.883331");
-//            getLocation();
+        if (currentTime.equals("22:43:00") || currentTime.equals("22:40:10") || currentTime.equals("16:00:00")) {
+//            requestHoursWeatherByLocation("21.116671", "105.883331");
+            requestHoursWeatherByLocation(lat, lon);
         }
     }
 
@@ -102,12 +106,13 @@ public class backgroundService extends Service {
                 .build();
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
         notificationManagerCompat.notify(1, notification);
-        startForeground(1, notification);
+        startForeground(1,notification);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopForeground(true);
     }
 
     private void getLocation() {
@@ -121,8 +126,10 @@ public class backgroundService extends Service {
                 @Override
                 public void onSuccess(Location location) {
                     if (location != null) {
-                        callApiByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
-                        requestHoursWeatherByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
+                        lat = String.valueOf(location.getLatitude());
+                        lon = String.valueOf(location.getLongitude());
+//                        callApiByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
+//                        requestHoursWeatherByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
                     }
                 }
             });

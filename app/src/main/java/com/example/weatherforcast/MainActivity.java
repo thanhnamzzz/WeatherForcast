@@ -105,8 +105,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         requestLocation();
-        Intent intent = new Intent(this, backgroundService.class);
-        startService(intent);
     }
 
     @Override
@@ -121,12 +119,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         handler.post(updateTime);
+        Intent intent = new Intent(this, backgroundService.class);
+        stopService(intent);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         handler.removeCallbacks(updateTime);
+        Intent intent = new Intent(this, backgroundService.class);
+        startService(intent);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 
     @Override
@@ -285,8 +292,7 @@ public class MainActivity extends AppCompatActivity {
                             if (location != null) {
                                 callApiByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
                                 requestHoursWeatherByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
-//                                returnLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude())) ;
-                            }
+                              }
                         }
                     });
         }
