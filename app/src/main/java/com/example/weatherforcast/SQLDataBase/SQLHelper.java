@@ -5,7 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Build;
 
 import androidx.annotation.Nullable;
 
@@ -13,8 +12,6 @@ import com.example.weatherforcast.search_City.CityName;
 import com.example.weatherforcast.search_City.Coord;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.stream.Collectors;
 
 public class SQLHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "dataweatherforcast.db";
@@ -90,7 +87,6 @@ public class SQLHelper extends SQLiteOpenHelper {
         sqLiteDatabase.close();
         return null;
     }
-
     public void deleteCity(CityName cityName) {
         SQLiteDatabase sqLiteDatabase = getWritableDatabase();
         String whereClause = ID_COLUMN + "=?";
@@ -98,16 +94,4 @@ public class SQLHelper extends SQLiteOpenHelper {
         sqLiteDatabase.delete(TABLE_NAME, whereClause, whereArray);
         sqLiteDatabase.close();
     }
-
-//    public void updateData(ArrayList<CityName> list) {
-//        SQLiteDatabase sqLiteDatabase = getWritableDatabase();
-//        String sql = "DELETE FROM " + SQLHelper.TABLE_NAME;
-//        sqLiteDatabase.execSQL(sql);
-//        if (list.size() > 0) {
-//            for (int i = 0; i < list.size(); i++) {
-//                addCity(list.get(i));
-//            }
-//        }
-//        sqLiteDatabase.close();
-//    }
 }

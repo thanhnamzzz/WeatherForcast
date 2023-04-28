@@ -1,8 +1,5 @@
 package com.example.weatherforcast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,6 +11,8 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.weatherforcast.SQLDataBase.SQLHelperHistory;
 import com.example.weatherforcast.search_City.CityName;
@@ -34,7 +33,6 @@ import butterknife.ButterKnife;
 
 public class SearchCity extends AppCompatActivity {
 
-    private static final String TAG = "Main";
     @BindView(R.id.btnBack)
     ImageButton btnBack;
     @BindView(R.id.edtSearchCity)
@@ -51,7 +49,6 @@ public class SearchCity extends AppCompatActivity {
     private List<CityName> cityNamesFromJSon;
     private ArrayList<String> listCityForSearch;
     private ArrayList<CityName> listCitySearched;
-//    private ArrayList<City> listCitySearched;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,22 +70,6 @@ public class SearchCity extends AppCompatActivity {
         edtSearchCity.setAdapter(arrayAdapter);
         arrayAdapter.notifyDataSetChanged();
 
-//        edtSearchCity.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//                Log.d(TAG, "beforeTextChanged: "+s);
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//                Log.d(TAG, "onTextChanged: "+s);
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//                Log.d(TAG, "afterTextChanged: "+s);
-//            }
-//        });
         edtSearchCity.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -214,7 +195,6 @@ public class SearchCity extends AppCompatActivity {
         inputStream.close();
         return new String(buffer, "utf-8");
     }
-
 
     @Override
     public void onBackPressed() {

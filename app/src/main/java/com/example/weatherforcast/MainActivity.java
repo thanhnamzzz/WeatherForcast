@@ -1,12 +1,14 @@
 package com.example.weatherforcast;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -30,6 +32,7 @@ import com.example.weatherforcast.hours_Weather.HoursAdapter;
 import com.example.weatherforcast.hours_Weather.HoursWeather;
 import com.example.weatherforcast.hours_Weather.ListHours;
 import com.example.weatherforcast.search_City.CityName;
+import com.example.weatherforcast.service.backgroundService;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -37,6 +40,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -46,10 +50,10 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     final String TAG = "MainAcitvity";
+    @BindView(R.id.bgWeather)
+    ImageView bgWeather;
     @BindView(R.id.tvCurrentCity)
     TextView tvCurrentCity;
-//    @BindView(R.id.btnSearch)
-//    ImageButton btnSearch;
     @BindView(R.id.tvCurrentTemple)
     TextView tvCurrentTemple;
     @BindView(R.id.tvCurrentDescription)
@@ -85,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
     TextView tvPressure;
     @BindView(R.id.tvTime)
     TextView tvTime;
+    Handler handler = new Handler();
 
     private WeatherServices mWeatherServices;
     private ArrayList<ListHours> mListHours;
@@ -100,6 +105,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         requestLocation();
+        Intent intent = new Intent(this, backgroundService.class);
+        startService(intent);
     }
 
     @Override
@@ -108,6 +115,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         inData();
         inView();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        handler.post(updateTime);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(updateTime);
     }
 
     @Override
@@ -124,13 +143,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void inView() {
         ButterKnife.bind(this);
-//        btnSearch.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent(MainActivity.this, SearchCity.class);
-//                startActivityForResult(intent, REQUEST_CODE);
-//            }
-//        });
         btnHourly.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -164,17 +176,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         rvHours.setAdapter(mHoursAdapter);
-        getTime();
     }
 
+    @SuppressLint("SetTextI18n")
     private void getTime() {
         Calendar calendar = Calendar.getInstance();
+        TimeZone timeZone = TimeZone.getTimeZone("GMT+7");
+        calendar.setTimeZone(timeZone);
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
         String currentDate = dateFormat.format(calendar.getTime());
         String currentTime = timeFormat.format(calendar.getTime());
-        tvTime.setText(currentTime + " " + currentDate);
+        tvTime.setText(currentTime + "  " + currentDate);
     }
+
+    private Runnable updateTime = new Runnable() {
+        @Override
+        public void run() {
+            getTime();
+            handler.postDelayed(this, 1000);
+        }
+    };
 
     private void inData() {
         mSqlHelper = new SQLHelper(getApplicationContext());
@@ -212,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestHoursWeatherByLocation(String lat, String lon) {
-        mWeatherServices.getWeatherHoursByLocation(lat, lon, Global.API_KEY).enqueue(new Callback<HoursWeather>() {
+        mWeatherServices.getWeatherHoursByLocation(lat, lon, Global.VN,Global.API_KEY).enqueue(new Callback<HoursWeather>() {
             @Override
             public void onResponse(Call<HoursWeather> call, Response<HoursWeather> response) {
                 requestListHourWeather(response);
@@ -231,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
             if (response.code() == 200) {
                 HoursWeather hoursWeather = response.body();
                 mListHours.clear();
-                for (int i = 0; i < 15; i++) {
+                for (int i = 0; i < 20; i++) {
                     mListHours.add((hoursWeather.getListHours().get(i)));
                 }
                 Log.d(TAG, "onResponse: mListHours.size " + mListHours.size());
@@ -263,6 +285,7 @@ public class MainActivity extends AppCompatActivity {
                             if (location != null) {
                                 callApiByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
                                 requestHoursWeatherByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
+//                                returnLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude())) ;
                             }
                         }
                     });
@@ -306,17 +329,47 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @SuppressLint("SetTextI18n")
     private void bindViewCurrentWeater(CurrentWeather currentWeather) {
         tvCurrentCity.setText(currentWeather.getName());
         tvCurrentTemple.setText(Global.convertKtoC(currentWeather.getMain().getTemp()));
         tvCurrentDescription.setText(currentWeather.getWeather().get(0).getDescription().toUpperCase());
         tvHightAndLow.setText("H: " + Global.convertKtoC(currentWeather.getMain().getTempMax())
                 + " - L: " + Global.convertKtoC(currentWeather.getMain().getTempMin()));
-        Glide.with(getApplicationContext()).load(Global.getImageDescription(currentWeather.getWeather().get(0).getIcon())).into(imgCurrentDescription);
+        Glide.with(getApplicationContext())
+                .load(Global.getImageDescription(currentWeather.getWeather().get(0).getIcon()))
+                .into(imgCurrentDescription);
         tvWindSpeed.setText(currentWeather.getWind().getSpeed() + " m/s");
         tvHumidity.setText(currentWeather.getMain().getHumidity() + "%");
         tvFeelsLike.setText(Global.convertKtoC(currentWeather.getMain().getFeelsLike()));
         tvPressure.setText(currentWeather.getMain().getPressure() + " hPa");
+
+        String iconDescription = currentWeather.getWeather().get(0).getIcon();
+        if (iconDescription.equals("01d") || iconDescription.equals("02d")){
+            bgWeather.setBackgroundResource(R.drawable.bg_01d_02d);
+        } else if (iconDescription.equals("01n")||iconDescription.equals("02n")) {
+            bgWeather.setBackgroundResource(R.drawable.bg_01n_02n);
+        } else if (iconDescription.equals("03d")||iconDescription.equals("04d")) {
+            bgWeather.setBackgroundResource(R.drawable.bg_03d_04d);
+        } else if (iconDescription.equals("03n")||iconDescription.equals("04n")) {
+            bgWeather.setBackgroundResource(R.drawable.bg_03n_04n);
+        } else if (iconDescription.equals("09d")||iconDescription.equals("10d")) {
+            bgWeather.setBackgroundResource(R.drawable.bg_09d_10d);
+        } else if (iconDescription.equals("09n")||iconDescription.equals("10n")) {
+            bgWeather.setBackgroundResource(R.drawable.bg_09n_10n);
+        } else if (iconDescription.equals("11d")) {
+            bgWeather.setBackgroundResource(R.drawable.bg_11d);
+        } else if (iconDescription.equals("11n")) {
+            bgWeather.setBackgroundResource(R.drawable.bg_11n);
+        } else if (iconDescription.equals("13d")) {
+            bgWeather.setBackgroundResource(R.drawable.bg_13d);
+        } else if (iconDescription.equals("13n")) {
+            bgWeather.setBackgroundResource(R.drawable.bg_13n);
+        } else if (iconDescription.equals("50d")) {
+            bgWeather.setBackgroundResource(R.drawable.bg_50d);
+        } else if (iconDescription.equals("50n")) {
+            bgWeather.setBackgroundResource(R.drawable.bg_50n);
+        }
     }
 
     @Override
@@ -335,11 +388,8 @@ public class MainActivity extends AppCompatActivity {
                     Boolean coarseLocationGranted = result.getOrDefault(
                             android.Manifest.permission.ACCESS_COARSE_LOCATION, false);
                     if (fineLocationGranted != null && fineLocationGranted) {
-                        // Precise location access granted.
                     } else if (coarseLocationGranted != null && coarseLocationGranted) {
-                        // Only approximate location access granted.
                     } else {
-                        // No location access granted.
                     }
                 });
         locationPermissionRequest.launch(new String[]{

@@ -1,17 +1,17 @@
 package com.example.weatherforcast;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.recyclerview.widget.RecyclerView;
-
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.weatherforcast.History_search.IOnItemClickListener;
 import com.example.weatherforcast.History_search.ListCityAdapter;
@@ -22,8 +22,6 @@ import com.example.weatherforcast.search_City.CityName;
 import com.example.weatherforcast.search_City.Coord;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.stream.Collectors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -54,6 +52,34 @@ public class ListCityActivity extends AppCompatActivity implements IOnItemClickL
         mWeatherServices = RetrofitClient.getServices(Global.BASE_URL, WeatherServices.class);
         inData();
         inView();
+    }
+
+    private void inData() {
+        mSqlHelper = new SQLHelper(getApplicationContext());
+        mListHistoryCity = new ArrayList<>();
+        mListCityAdapter = new ListCityAdapter(mListHistoryCity);
+        loadListHistoryCity(mSqlHelper);
+    }
+
+    private void inView() {
+        ButterKnife.bind(this);
+        btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+        btnSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(ListCityActivity.this, SearchCity.class);
+                startActivityForResult(intent, REQUEST_CODE);
+            }
+        });
+        mListCityAdapter.setIOnItemClickListener(this);
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDeleteItem(mListCityAdapter, this::onSwiped));
+        itemTouchHelper.attachToRecyclerView(rvListCity);
+        rvListCity.setAdapter(mListCityAdapter);
     }
 
     @Override
@@ -102,8 +128,6 @@ public class ListCityActivity extends AppCompatActivity implements IOnItemClickL
         for (int i = 0; i < cities.size(); i++) {
             lat = String.valueOf(cities.get(i).getCoord().getLat());
             lon = String.valueOf(cities.get(i).getCoord().getLon());
-
-            //Do thời gian trả về của retrofit mỗi lần request là khác nhau lên số thứ tự sẽ không lần lượt
             int finalI = i;
             mWeatherServices.getWeatherByLocation(lat, lon, Global.VN, Global.API_KEY).enqueue(new Callback<CurrentWeather>() {
                 @Override
@@ -116,7 +140,6 @@ public class ListCityActivity extends AppCompatActivity implements IOnItemClickL
                             binData(mListHistoryCity);
                         }
                     }
-
                 }
 
                 @Override
@@ -132,38 +155,12 @@ public class ListCityActivity extends AppCompatActivity implements IOnItemClickL
             Log.d(TAG, "bindData: mListHistoryCity trống");
         } else {
             Log.d(TAG, "bindData: mListHistoryCity.size " + mListHistoryCity.size());
-
-            //Có thể nâng APi lên 24 cũng được do 21 = android 5.0 giờ cũng ít máy rồi
-            mListCityAdapter.updateData((ArrayList<CurrentWeather>) mListHistoryCity.stream().sorted(Comparator.comparingInt(CurrentWeather::getId)).collect(Collectors.toList()));
+            mListCityAdapter.updateData(mListHistoryCity);
+//            mListCityAdapter.updateData((ArrayList<CurrentWeather>) mListHistoryCity
+//                    .stream()
+//                    .sorted(Comparator.comparingInt(CurrentWeather::getId))
+//                    .collect(Collectors.toList()));
         }
-    }
-
-    private void inData() {
-        mSqlHelper = new SQLHelper(getApplicationContext());
-        mListHistoryCity = new ArrayList<>();
-        mListCityAdapter = new ListCityAdapter(mListHistoryCity);
-        loadListHistoryCity(mSqlHelper);
-    }
-
-    private void inView() {
-        ButterKnife.bind(this);
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
-        btnSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(ListCityActivity.this, SearchCity.class);
-                startActivityForResult(intent, REQUEST_CODE);
-            }
-        });
-        mListCityAdapter.setIOnItemClickListener(this);
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDeleteItem(mListCityAdapter, this::onSwiped));
-        itemTouchHelper.attachToRecyclerView(rvListCity);
-        rvListCity.setAdapter(mListCityAdapter);
     }
 
     @Override
@@ -182,11 +179,12 @@ public class ListCityActivity extends AppCompatActivity implements IOnItemClickL
         Intent intent = new Intent();
         intent.putExtra("lat", lat);
         intent.putExtra("lon", lon);
-        Log.d(TAG, "searchData: lat " + lat + " lon " + lon);
+//        Log.d(TAG, "searchData: lat " + lat + " lon " + lon);
         setResult(Activity.RESULT_OK, intent);
         finish();
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int position) {
         CityName cityNameDelete = new CityName();
@@ -202,18 +200,6 @@ public class ListCityActivity extends AppCompatActivity implements IOnItemClickL
         ListCityAdapter.ListCityViewHolder listCityViewHolder = (ListCityAdapter.ListCityViewHolder) viewHolder;
         listCityViewHolder.deleteItem(position);
         mListHistoryCity.remove(position);
-
-//        ArrayList<CityName> newListCityName = new ArrayList<>();
-//        CityName cityName = new CityName();
-//        Coord coord = new Coord();
-//        for (int i = 0; i < mListHistoryCity.size(); i++) {
-//            cityName.setName(mListHistoryCity.get(position).getName());
-//            coord.setLat(mListHistoryCity.get(position).getCoord().getLat());
-//            coord.setLon(mListHistoryCity.get(position).getCoord().getLon());
-//            cityName.setCoord(coord);
-//            newListCityName.add(cityName);
-//        }
-//        mSqlHelper.updateData(newListCityName);
 
         mListCityAdapter.notifyDataSetChanged();
     }

@@ -1,5 +1,6 @@
 package com.example.weatherforcast.History_search;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,12 +36,13 @@ public class ListCityAdapter extends RecyclerView.Adapter<ListCityAdapter.ListCi
         return new ListCityViewHolder(view);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull ListCityAdapter.ListCityViewHolder holder, int position) {
         CurrentWeather currentWeather = mListHistoryCity.get(position);
         holder.tvCitySelect.setText(currentWeather.getName());
         holder.tvCurrentTempleCity.setText(Global.convertKtoC(currentWeather.getMain().getTemp()));
-        holder.tvDescriptionCity.setText(currentWeather.getWeather().get(0).getDescription());
+        holder.tvDescriptionCity.setText(currentWeather.getWeather().get(0).getDescription().toUpperCase());
         holder.tvHightAndLow.setText("H: " + Global.convertKtoC(currentWeather.getMain().getTempMax())
                 + " - L: " + Global.convertKtoC(currentWeather.getMain().getTempMin()));
         Glide.with(mConText).load(Global.getImageDescriptionHours(currentWeather.getWeather().get(0).getIcon())).into(holder.imgDescriptionCity);
@@ -51,6 +53,7 @@ public class ListCityAdapter extends RecyclerView.Adapter<ListCityAdapter.ListCi
         return mListHistoryCity.size();
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     public void updateData(ArrayList<CurrentWeather> mListHistoryCity) {
         this.mListHistoryCity.clear();
         this.mListHistoryCity.addAll(mListHistoryCity);

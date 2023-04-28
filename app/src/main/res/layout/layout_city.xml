@@ -4,32 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-<!--    <RelativeLayout-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:background="@color/quantum_googred">-->
-
-<!--        <TextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_centerVertical="true"-->
-<!--            android:layout_marginEnd="@dimen/_10sdp"-->
-<!--            android:layout_toStartOf="@id/imgDelete"-->
-<!--            android:fontFamily="@font/sf_pro_display_regular"-->
-<!--            android:text="@string/delete"-->
-<!--            android:textColor="@color/white"-->
-<!--            android:textSize="@dimen/_13sdp" />-->
-
-<!--        <ImageView-->
-<!--            android:id="@+id/imgDelete"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_alignParentEnd="true"-->
-<!--            android:layout_centerVertical="true"-->
-<!--            android:layout_marginEnd="@dimen/_10sdp"-->
-<!--            android:src="@drawable/icon_delete" />-->
-<!--    </RelativeLayout>-->
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -99,7 +73,7 @@
             android:fontFamily="@font/sf_pro_display_regular"
             android:text="City Name"
             android:textColor="@color/white"
-            android:textSize="@dimen/_10sdp"
+            android:textSize="@dimen/_11sdp"
             app:layout_constraintLeft_toLeftOf="@id/y1"
             app:layout_constraintRight_toLeftOf="@id/y2"
             app:layout_constraintTop_toBottomOf="@id/tvHightAndLow" />
@@ -108,13 +82,12 @@
             android:id="@+id/tvDescriptionCity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/_10sdp"
-            android:layout_marginRight="@dimen/_40sdp"
             android:fontFamily="@font/sf_pro_display_regular"
             android:text="Description"
             android:textColor="@color/white"
-            android:textSize="@dimen/_10sdp"
-            app:layout_constraintRight_toRightOf="parent"
+            android:textSize="@dimen/_9sdp"
+            app:layout_constraintLeft_toLeftOf="@id/imgDescriptionCity"
+            app:layout_constraintRight_toRightOf="@id/imgDescriptionCity"
             app:layout_constraintTop_toBottomOf="@id/imgDescriptionCity" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 

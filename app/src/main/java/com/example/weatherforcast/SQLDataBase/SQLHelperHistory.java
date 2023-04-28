@@ -70,13 +70,4 @@ public class SQLHelperHistory extends SQLiteOpenHelper {
         sqLiteDatabase.close();
         return null;
     }
-////k phải cái này
-//
-//    public void deleteSearchCity(City city){
-//        SQLiteDatabase sqLiteDatabase = getWritableDatabase();
-//        String whereClause = ID_COLUMN + "=?";
-//        String whereArray[] = {city.getId()+""};
-//        sqLiteDatabase.delete(TABLE_NAME,whereClause, whereArray);
-//        sqLiteDatabase.close();
-//    }
 }

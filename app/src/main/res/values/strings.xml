@@ -4,4 +4,6 @@
     <string name="dayly">Hàng ngày</string>
     <string name="weather">Weather</string>
     <string name="delete">Xóa</string>
+    <string name="channel_name">Thông báo</string>
+    <string name="channel_description">Thông báo thời tiết hàng ngày và cảnh báo thời tiết xấu tại vị trí hiện tại</string>
 </resources>

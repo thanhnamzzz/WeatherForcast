@@ -17,5 +17,5 @@ public interface WeatherServices {
     @GET("forecast?")
     Call<HoursWeather> getWeatherHoursByCityName(@Query("q")String cityName, @Query("appid") String apiKey);
     @GET("forecast?")
-    Call<HoursWeather> getWeatherHoursByLocation(@Query("lat") String lat, @Query("lon") String lon, @Query("appid") String apiKey);
+    Call<HoursWeather> getWeatherHoursByLocation(@Query("lat") String lat, @Query("lon") String lon,@Query("lang") String lang, @Query("appid") String apiKey);
 }
