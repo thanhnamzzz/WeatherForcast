@@ -76,7 +76,7 @@ public class backgroundService extends Service {
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
         String currentTime = timeFormat.format(calendar.getTime());
         getLocation();
-        Log.d("TAG", "checkTime: lat " + lat + "| lon " + lon);
+        Log.d("checkTime", "checkTime: lat " + lat + "| lon " + lon);
         if (currentTime.equals("07:00:00")) {
 //            callApiByLocation("21.116671", "105.883331");
             callApiByLocation(lat, lon);
