@@ -3,12 +3,16 @@ package com.example.weatherforcast;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -50,6 +54,22 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     final String TAG = "MainAcitvity";
+    private backgroundService mBackgroundService;
+    private boolean isServiceConnected;
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder iBinder) {
+            backgroundService.MyBinder myBinder = (backgroundService.MyBinder) iBinder;
+            mBackgroundService = myBinder.getBackgroundService();
+            isServiceConnected = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mBackgroundService = null;
+            isServiceConnected = false;
+        }
+    };
     @BindView(R.id.bgWeather)
     ImageView bgWeather;
     @BindView(R.id.tvCurrentCity)
@@ -105,12 +125,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         requestLocation();
+        Intent intent = new Intent(this, backgroundService.class);
+        startService(intent);
+        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         inData();
         inView();
     }
@@ -119,21 +143,22 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         handler.post(updateTime);
-        Intent intent = new Intent(this, backgroundService.class);
-        stopService(intent);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         handler.removeCallbacks(updateTime);
-        Intent intent = new Intent(this, backgroundService.class);
-        startService(intent);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     @Override
@@ -241,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestHoursWeatherByLocation(String lat, String lon) {
-        mWeatherServices.getWeatherHoursByLocation(lat, lon, Global.VN,Global.API_KEY).enqueue(new Callback<HoursWeather>() {
+        mWeatherServices.getWeatherHoursByLocation(lat, lon, Global.VN, Global.API_KEY).enqueue(new Callback<HoursWeather>() {
             @Override
             public void onResponse(Call<HoursWeather> call, Response<HoursWeather> response) {
                 requestListHourWeather(response);
@@ -292,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
                             if (location != null) {
                                 callApiByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
                                 requestHoursWeatherByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
-                              }
+                            }
                         }
                     });
         }
@@ -351,17 +376,17 @@ public class MainActivity extends AppCompatActivity {
         tvPressure.setText(currentWeather.getMain().getPressure() + " hPa");
 
         String iconDescription = currentWeather.getWeather().get(0).getIcon();
-        if (iconDescription.equals("01d") || iconDescription.equals("02d")){
+        if (iconDescription.equals("01d") || iconDescription.equals("02d")) {
             bgWeather.setBackgroundResource(R.drawable.bg_01d_02d);
-        } else if (iconDescription.equals("01n")||iconDescription.equals("02n")) {
+        } else if (iconDescription.equals("01n") || iconDescription.equals("02n")) {
             bgWeather.setBackgroundResource(R.drawable.bg_01n_02n);
-        } else if (iconDescription.equals("03d")||iconDescription.equals("04d")) {
+        } else if (iconDescription.equals("03d") || iconDescription.equals("04d")) {
             bgWeather.setBackgroundResource(R.drawable.bg_03d_04d);
-        } else if (iconDescription.equals("03n")||iconDescription.equals("04n")) {
+        } else if (iconDescription.equals("03n") || iconDescription.equals("04n")) {
             bgWeather.setBackgroundResource(R.drawable.bg_03n_04n);
-        } else if (iconDescription.equals("09d")||iconDescription.equals("10d")) {
+        } else if (iconDescription.equals("09d") || iconDescription.equals("10d")) {
             bgWeather.setBackgroundResource(R.drawable.bg_09d_10d);
-        } else if (iconDescription.equals("09n")||iconDescription.equals("10n")) {
+        } else if (iconDescription.equals("09n") || iconDescription.equals("10n")) {
             bgWeather.setBackgroundResource(R.drawable.bg_09n_10n);
         } else if (iconDescription.equals("11d")) {
             bgWeather.setBackgroundResource(R.drawable.bg_11d);

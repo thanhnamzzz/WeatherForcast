@@ -1,8 +1,17 @@
 plugins {
     id 'com.android.application'
+    id 'com.google.gms.google-services'
 }
 
 android {
+    signingConfigs {
+        weatherforcast_config {
+            storeFile file('D:\\00.Hoc Java Android\\Android\\00.Key Store\\keystore_weatherforcast.jks')
+            storePassword '31081995'
+            keyAlias 'WeatherForcast'
+            keyPassword '31081995'
+        }
+    }
     namespace 'com.example.weatherforcast'
     compileSdk 33
 
@@ -20,6 +29,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.weatherforcast_config
         }
     }
     compileOptions {
@@ -44,6 +54,9 @@ dependencies {
 
     //Google services
     implementation 'com.google.android.gms:play-services-location:21.0.1'
+    //Firebase Bom
+    implementation platform('com.google.firebase:firebase-bom:31.5.0')
+    implementation 'com.google.firebase:firebase-messaging'
     //SDP
     implementation 'com.intuit.sdp:sdp-android:1.1.0'
 

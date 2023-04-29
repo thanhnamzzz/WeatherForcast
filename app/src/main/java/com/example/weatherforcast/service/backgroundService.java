@@ -1,6 +1,7 @@
 package com.example.weatherforcast.service;
 
 import static com.example.weatherforcast.service.MyApplication.CHANNEL_ID;
+import static com.example.weatherforcast.service.MyApplication.CHANNEL_ID_NULL;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -10,9 +11,9 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -42,23 +43,54 @@ public class backgroundService extends Service {
     private WeatherServices mWeatherServices;
     String lat, lon;
     Handler mHandler = new Handler();
+    private MyBinder myBinder = new MyBinder();
+
+    public class MyBinder extends Binder {
+        public backgroundService getBackgroundService() {
+            return backgroundService.this;
+        }
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        showNotificationApp();
         mWeatherServices = RetrofitClient.getServices(Global.BASE_URL, WeatherServices.class);
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return myBinder;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        return super.onUnbind(intent);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         mHandler.post(updateTime);
-        return START_STICKY;
+        return START_NOT_STICKY;
+    }
+
+    private void showNotificationApp() {
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Notification notification= new NotificationCompat.Builder(this, CHANNEL_ID_NULL)
+                .setSmallIcon(R.drawable.icon_app_weather)
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setSound(null)
+                .setVibrate(null)
+                .build();
+        startForeground(3, notification);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     private Runnable updateTime = new Runnable() {
@@ -75,15 +107,16 @@ public class backgroundService extends Service {
         calendar.setTimeZone(timeZone);
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
         String currentTime = timeFormat.format(calendar.getTime());
-        getLocation();
-        Log.d("checkTime", "checkTime: lat " + lat + "| lon " + lon);
         if (currentTime.equals("07:00:00")) {
-//            callApiByLocation("21.116671", "105.883331");
+            getLocation();
             callApiByLocation(lat, lon);
+//            callApiByLocation("21.116671", "105.883331");
         }
-        if (currentTime.equals("22:43:00") || currentTime.equals("22:40:10") || currentTime.equals("16:00:00")) {
-//            requestHoursWeatherByLocation("21.116671", "105.883331");
+        if (currentTime.equals("09:00:00") || currentTime.equals("12:00:00") || currentTime.equals("15:00:00")
+                || currentTime.equals("17:30:00")) {
+            getLocation();
             requestHoursWeatherByLocation(lat, lon);
+//            requestHoursWeatherByLocation("21.116671", "105.883331");
         }
     }
 
@@ -106,13 +139,7 @@ public class backgroundService extends Service {
                 .build();
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
         notificationManagerCompat.notify(1, notification);
-        startForeground(1,notification);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        stopForeground(true);
+//        startForeground(1, notification);
     }
 
     private void getLocation() {
@@ -203,7 +230,7 @@ public class backgroundService extends Service {
                 .build();
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
         notificationManagerCompat.notify(2, notification);
-        startForeground(2, notification);
+//        startForeground(2, notification);
     }
 
 }
