@@ -212,7 +212,6 @@ public class backgroundService extends Service {
             }
         }
     }
-
     @SuppressLint("MissingPermission")
     private void sendNotificationBadWeather(HoursWeather hoursWeather, int i) {
         String cityName = hoursWeather.getCity().getName();
