@@ -63,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
             mBackgroundService = myBinder.getBackgroundService();
             isServiceConnected = true;
         }
-
         @Override
         public void onServiceDisconnected(ComponentName name) {
             mBackgroundService = null;
