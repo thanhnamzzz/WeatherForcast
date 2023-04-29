@@ -45,7 +45,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/sf_pro_display_regular"
-        android:text="City"
+        android:text="--"
         android:textColor="@color/white"
         android:textSize="@dimen/_15sdp"
         app:layout_constraintBottom_toTopOf="@id/x2"
@@ -78,7 +78,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/sf_pro_display_thin"
-            android:text="19°C"
+            android:text="--"
             android:textColor="@color/white"
             android:textSize="@dimen/_60sdp" />
 

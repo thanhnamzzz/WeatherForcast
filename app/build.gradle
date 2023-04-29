@@ -1,6 +1,5 @@
 plugins {
     id 'com.android.application'
-    id 'com.google.gms.google-services'
 }
 
 android {
@@ -54,9 +53,6 @@ dependencies {
 
     //Google services
     implementation 'com.google.android.gms:play-services-location:21.0.1'
-    //Firebase Bom
-    implementation platform('com.google.firebase:firebase-bom:31.5.0')
-    implementation 'com.google.firebase:firebase-messaging'
     //SDP
     implementation 'com.intuit.sdp:sdp-android:1.1.0'
 

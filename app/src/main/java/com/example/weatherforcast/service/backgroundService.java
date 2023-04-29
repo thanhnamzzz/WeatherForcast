@@ -43,6 +43,7 @@ public class backgroundService extends Service {
     private WeatherServices mWeatherServices;
     String lat, lon;
     Handler mHandler = new Handler();
+    boolean selectNoti;
     private MyBinder myBinder = new MyBinder();
 
     public class MyBinder extends Binder {
@@ -77,15 +78,16 @@ public class backgroundService extends Service {
 
     private void showNotificationApp() {
         Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        Notification notification= new NotificationCompat.Builder(this, CHANNEL_ID_NULL)
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.icon_app_weather)
                 .setContentIntent(pendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setSound(null)
                 .setVibrate(null)
+                .setShowWhen(false)
                 .build();
-        startForeground(3, notification);
+        startForeground(1, notification);
     }
 
     @Override
@@ -96,27 +98,25 @@ public class backgroundService extends Service {
     private Runnable updateTime = new Runnable() {
         @Override
         public void run() {
-            checkTime();
+            getTime();
             mHandler.postDelayed(this, 1000);
         }
     };
 
-    private void checkTime() {
+    private void getTime() {
         Calendar calendar = Calendar.getInstance();
         TimeZone timeZone = TimeZone.getTimeZone("GMT+7");
         calendar.setTimeZone(timeZone);
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
         String currentTime = timeFormat.format(calendar.getTime());
         if (currentTime.equals("07:00:00")) {
-            getLocation();
-            callApiByLocation(lat, lon);
-//            callApiByLocation("21.116671", "105.883331");
+            selectNoti = true;
+            getLocation(selectNoti);
         }
-        if (currentTime.equals("09:00:00") || currentTime.equals("12:00:00") || currentTime.equals("15:00:00")
-                || currentTime.equals("17:30:00")) {
-            getLocation();
-            requestHoursWeatherByLocation(lat, lon);
-//            requestHoursWeatherByLocation("21.116671", "105.883331");
+        if (currentTime.equals("21:30:00") || currentTime.equals("21:30:10") || currentTime.equals("21:30:20")
+                || currentTime.equals("21:30:30")) {
+            selectNoti = false;
+            getLocation(selectNoti);
         }
     }
 
@@ -127,7 +127,7 @@ public class backgroundService extends Service {
         String templ = Global.convertKtoC(currentWeather.getMain().getTemp());
 
         Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         String contentText = "Chúc ngày mới tốt lành!\nThời tiết " + cityName + " hôm nay: " + description + "\nNhiệt độ hiện tại " + templ;
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Thời tiết")
@@ -138,11 +138,10 @@ public class backgroundService extends Service {
                 .setAutoCancel(true)
                 .build();
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
-        notificationManagerCompat.notify(1, notification);
-//        startForeground(1, notification);
+        notificationManagerCompat.notify(2, notification);
     }
 
-    private void getLocation() {
+    private void getLocation(boolean selectNoti) {
         FusedLocationProviderClient fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED
@@ -155,8 +154,11 @@ public class backgroundService extends Service {
                     if (location != null) {
                         lat = String.valueOf(location.getLatitude());
                         lon = String.valueOf(location.getLongitude());
-//                        callApiByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
-//                        requestHoursWeatherByLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
+                        if (selectNoti == true) {
+                            callApiByLocation(lat, lon);
+                        } else {
+                            requestHoursWeatherByLocation(lat, lon);
+                        }
                     }
                 }
             });
@@ -218,7 +220,7 @@ public class backgroundService extends Service {
         String templ = Global.convertKtoC(hoursWeather.getListHours().get(i).getMain().getTemp());
 
         Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         String contentText = "Cảnh báo thời tiết xấu!\nThời tiết tại " + cityName + " trong khoảng " + (i + 1) * 3 + " giờ tới " + description + "\nNhiệt độ khoảng " + templ;
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Thời tiết")
@@ -230,7 +232,6 @@ public class backgroundService extends Service {
                 .build();
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
         notificationManagerCompat.notify(2, notification);
-//        startForeground(2, notification);
     }
 
 }
