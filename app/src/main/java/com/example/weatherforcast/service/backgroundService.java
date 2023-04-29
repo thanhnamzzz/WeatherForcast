@@ -113,8 +113,8 @@ public class backgroundService extends Service {
             selectNoti = true;
             getLocation(selectNoti);
         }
-        if (currentTime.equals("21:30:00") || currentTime.equals("21:30:10") || currentTime.equals("21:30:20")
-                || currentTime.equals("21:30:30")) {
+        if (currentTime.equals("09:00:00") || currentTime.equals("11:30:00") || currentTime.equals("13:15:00")
+                || currentTime.equals("16:30:00")) {
             selectNoti = false;
             getLocation(selectNoti);
         }
@@ -202,7 +202,7 @@ public class backgroundService extends Service {
         if (response.isSuccessful()) {
             if (response.code() == 200) {
                 HoursWeather hoursWeather = response.body();
-                for (int i = 0; i < 5; i++) {
+                for (int i = 0; i < 2; i++) {
                     String iconDescription = hoursWeather.getListHours().get(i).getWeather().get(0).getIcon().trim();
                     if (iconDescription.equals("09d") || iconDescription.equals("09n") || iconDescription.equals("10d") ||
                             iconDescription.equals("10n") || iconDescription.equals("11d") || iconDescription.equals("11n")) {
