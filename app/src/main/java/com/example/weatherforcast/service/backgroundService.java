@@ -1,7 +1,6 @@
 package com.example.weatherforcast.service;
 
 import static com.example.weatherforcast.service.MyApplication.CHANNEL_ID;
-import static com.example.weatherforcast.service.MyApplication.CHANNEL_ID_NULL;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -73,6 +72,15 @@ public class backgroundService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         mHandler.post(updateTime);
+//        Timer timer = new Timer();
+//        TimerTask timerTask = new TimerTask() {
+//            @Override
+//            public void run() {
+//                selectNoti = false;
+//                getLocation(selectNoti);
+//            }
+//        };
+//        timer.schedule(timerTask, 0, 5000);
         return START_NOT_STICKY;
     }
 
@@ -98,8 +106,13 @@ public class backgroundService extends Service {
     private Runnable updateTime = new Runnable() {
         @Override
         public void run() {
-            getTime();
-            mHandler.postDelayed(this, 1000);
+//            getTime();
+//            selectNoti = false;
+//            getLocation(selectNoti);
+            lat = "21.116671";
+            lon = "105.883331";
+            requestHoursWeatherByLocation(lat, lon);
+            mHandler.postDelayed(this, 5*60*1000);
         }
     };
 
@@ -109,15 +122,28 @@ public class backgroundService extends Service {
         calendar.setTimeZone(timeZone);
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
         String currentTime = timeFormat.format(calendar.getTime());
-        if (currentTime.equals("07:00:00")) {
-            selectNoti = true;
-            getLocation(selectNoti);
-        }
-        if (currentTime.equals("09:00:00") || currentTime.equals("11:30:00") || currentTime.equals("13:15:00")
-                || currentTime.equals("16:30:00")) {
-            selectNoti = false;
-            getLocation(selectNoti);
-        }
+//        if (currentTime.equals("07:00:00")) {
+//            selectNoti = true;
+//            getLocation(selectNoti);
+//        }
+//        } else {
+//            Timer timer = new Timer();
+//            TimerTask timerTask = new TimerTask() {
+//                @Override
+//                public void run() {
+//                    selectNoti = false;
+//                    getLocation(selectNoti);
+//                }
+//            };
+//            timer.schedule(timerTask, 0, 10 * 1000);
+//        }
+//        if (currentTime.equals("09:00:00") || currentTime.equals("11:30:00") || currentTime.equals("13:15:00")
+//                || currentTime.equals("16:30:00")
+//                || currentTime.equals("14:57:00")
+//                || currentTime.equals("14:57:10")) {
+//            selectNoti = false;
+//            getLocation(selectNoti);
+//        }
     }
 
     @SuppressLint("MissingPermission")
@@ -152,8 +178,10 @@ public class backgroundService extends Service {
                 @Override
                 public void onSuccess(Location location) {
                     if (location != null) {
-                        lat = String.valueOf(location.getLatitude());
-                        lon = String.valueOf(location.getLongitude());
+//                        lat = String.valueOf(location.getLatitude());
+//                        lon = String.valueOf(location.getLongitude());
+                        lat = "21.116671";
+                        lon = "105.883331";
                         if (selectNoti == true) {
                             callApiByLocation(lat, lon);
                         } else {
@@ -202,16 +230,19 @@ public class backgroundService extends Service {
         if (response.isSuccessful()) {
             if (response.code() == 200) {
                 HoursWeather hoursWeather = response.body();
-                for (int i = 0; i < 2; i++) {
-                    String iconDescription = hoursWeather.getListHours().get(i).getWeather().get(0).getIcon().trim();
-                    if (iconDescription.equals("09d") || iconDescription.equals("09n") || iconDescription.equals("10d") ||
-                            iconDescription.equals("10n") || iconDescription.equals("11d") || iconDescription.equals("11n")) {
-                        sendNotificationBadWeather(hoursWeather, i);
-                    }
+                for (int i = 0; i < 3; i++) {
+//                    String iconDescription = hoursWeather.getListHours().get(i).getWeather().get(0).getIcon().trim();
+//                    if (iconDescription.equals("04d") || iconDescription.equals("04n") ||
+//                            iconDescription.equals("09d") || iconDescription.equals("09n") || iconDescription.equals("10d") ||
+//                            iconDescription.equals("10n") || iconDescription.equals("11d") || iconDescription.equals("11n")) {
+//                        sendNotificationBadWeather(hoursWeather, i);
+//                    }
+                    sendNotificationBadWeather(hoursWeather, 1);
                 }
             }
         }
     }
+
     @SuppressLint("MissingPermission")
     private void sendNotificationBadWeather(HoursWeather hoursWeather, int i) {
         String cityName = hoursWeather.getCity().getName();
@@ -234,3 +265,16 @@ public class backgroundService extends Service {
     }
 
 }
+//        } else {
+//            Handler handler = new Handler();
+//            Runnable runnable = new Runnable() {
+//                @Override
+//                public void run() {
+//                    selectNoti = false;
+//                    getLocation(selectNoti);
+//                    handler.postDelayed(this, 60*1000);
+//                }
+//            };
+//            handler.postDelayed(runnable, 60*1000);
+//
+//        }
